@@ -77,7 +77,7 @@ func createTableOne(stub shim.ChaincodeStubInterface) error {
 	columnFour := shim.ColumnDefinition{Name: "oemAddress",
 		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnFive := shim.ColumnDefinition{Name: "dealerID",
-		Type: shim.ColumnDefinition_STRING, Key: false}
+		Type: shim.ColumnDefinition_STRING, Key: true}
 	columnSix := shim.ColumnDefinition{Name: "dealerName",
 		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnSeven := shim.ColumnDefinition{Name: "dealerAddress",
@@ -185,11 +185,15 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		}
 
 		col1Val := args[0]
-		var newColumns []shim.Column
+		col2Val := args[1]
+		var columnsUp []shim.Column
 		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-		newColumns = append(newColumns, col1)
+		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 
-		row, err := stub.GetRow("PurchaseOrder", newColumns)
+		columnsUp = append(columnsUp, col1)
+		columnsUp = append(columnsUp, col2)
+
+		row, err := stub.GetRow("PurchaseOrder", columnsUp)
 		if err != nil {
 			return nil, fmt.Errorf("getRowTableOne operation failed. %s", err)
 			panic(err)
@@ -211,7 +215,7 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		cl11 := shim.Column{Value: &shim.Column_String_{String_: v.PoAmount}}
 		cl12 := shim.Column{Value: &shim.Column_String_{String_: v.PoCreationDate}}
 		cl13 := shim.Column{Value: &shim.Column_String_{String_: v.ExpectedDeliveryDate}}
-		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[1]}}
+		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[2]}}
 
 		columns = append(columns, &cl1)
 		columns = append(columns, &cl2)
@@ -253,12 +257,16 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 		if len(args) < 1 {
 			return nil, errors.New("getRowTableOne failed. Must include 1 key value")
 		}
-
 		col1Val := args[0]
+		col2Val := args[1]
 		var columns []shim.Column
 		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
 
 		columns = append(columns, col1)
+		columns = append(columns, col2)
+
+		
 
 		row, err := stub.GetRow("PurchaseOrder", columns)
 		if err != nil {
@@ -290,6 +298,70 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 			panic(err)
 		}
 		return json_byte, nil
+		
+		case "getAllPo":
+		if len(args) < 1 {
+			return nil, errors.New("getRowsTableFour failed. Must include 1 key value")
+		}
+
+		var columns []shim.Column
+
+//		col1Val := args[0]
+//		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+//
+//		columns = append(columns, col1)
+
+		rowChannel, err := stub.GetRows("PurchaseOrder", columns)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. %s", err)
+		}
+
+		
+		res2E := []*PoOrder{}
+		
+		for {
+			select {
+
+			case row, ok := <-rowChannel:
+
+				if !ok {
+					rowChannel = nil
+				} else {
+
+					u := new(PoOrder)
+					
+					u.PoID = row.Columns[0].GetString_()
+					u.OemID = row.Columns[1].GetString_()
+					u.OemName = row.Columns[2].GetString_()
+					u.OemAddress = row.Columns[3].GetString_()
+					u.DealerID = row.Columns[4].GetString_()
+					u.DealerName = row.Columns[5].GetString_()
+					u.DealerAddress = row.Columns[6].GetString_()
+					v := OrderDetails{}
+					v.VehicleMake = row.Columns[7].GetString_()
+					v.Model = row.Columns[8].GetString_()
+					v.Price = row.Columns[9].GetString_()
+					u.Order = v
+					u.PoAmount = row.Columns[10].GetString_()
+					u.PoCreationDate = row.Columns[11].GetString_()
+					u.ExpectedDeliveryDate = row.Columns[12].GetString_()
+					u.Status = row.Columns[13].GetString_()
+					res2E = append(res2E, u)
+				}
+			}
+			if rowChannel == nil {
+				break
+			}
+		}
+
+		jsonRows, err := json.Marshal(res2E)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. Error marshaling JSON: %s", err)
+		}
+
+		return jsonRows, nil
 
 	default:
 		return nil, errors.New("Unsupported operation")
