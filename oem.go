@@ -115,7 +115,7 @@ func createTableOne(stub shim.ChaincodeStubInterface) error {
 }
 
 func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-		switch function {
+	switch function {
 
 	case "insertPo":
 		if len(args) < 1 {
@@ -266,8 +266,6 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 		columns = append(columns, col1)
 		columns = append(columns, col2)
 
-		
-
 		row, err := stub.GetRow("PurchaseOrder", columns)
 		if err != nil {
 			return []byte("No record found for id: " + col1Val), fmt.Errorf("getRowTableOne operation failed. %s", err)
@@ -298,18 +296,18 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 			panic(err)
 		}
 		return json_byte, nil
-		
-		case "getAllPo":
+
+	case "getAllPo":
 		if len(args) < 1 {
 			return nil, errors.New("getRowsTableFour failed. Must include 1 key value")
 		}
 
 		var columns []shim.Column
 
-//		col1Val := args[0]
-//		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-//
-//		columns = append(columns, col1)
+		//		col1Val := args[0]
+		//		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
+		//
+		//		columns = append(columns, col1)
 
 		rowChannel, err := stub.GetRows("PurchaseOrder", columns)
 
@@ -317,9 +315,8 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 			return nil, fmt.Errorf("getRowsTableFour operation failed. %s", err)
 		}
 
-		
 		res2E := []*PoOrder{}
-		
+
 		for {
 			select {
 
@@ -330,7 +327,6 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 				} else {
 
 					u := new(PoOrder)
-					
 					u.PoID = row.Columns[0].GetString_()
 					u.OemID = row.Columns[1].GetString_()
 					u.OemName = row.Columns[2].GetString_()
