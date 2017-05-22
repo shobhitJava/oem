@@ -25,6 +25,7 @@ type PoOrder struct {
 	PoCreationDate       string       `json:"poCreationDate"`
 	ExpectedDeliveryDate string       `json:"expectedDeliveryDate"`
 	Status               string       `json:"status"`
+	FinancialAgreementNo string		  `json:"status"`
 }
 
 //this struct is tp create orederdetails
@@ -32,6 +33,7 @@ type OrderDetails struct {
 	VehicleMake string `json:"make"`
 	Model       string `json:"model"`
 	Price       string `json:"price"`
+	Quantity	string	`json:"qunatity"`
 }
 
 type InvoiceDetails struct {
@@ -96,6 +98,10 @@ func createTableOne(stub shim.ChaincodeStubInterface) error {
 		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnFourteen := shim.ColumnDefinition{Name: "status",
 		Type: shim.ColumnDefinition_STRING, Key: false}
+	columnFifteen := shim.ColumnDefinition{Name: "quantity",
+		Type: shim.ColumnDefinition_STRING, Key: false}
+	columnSixteen := shim.ColumnDefinition{Name: "financialAgreementNo",
+		Type: shim.ColumnDefinition_STRING, Key: false}
 
 	columnTableOne = append(columnTableOne, &columnOne)
 	columnTableOne = append(columnTableOne, &columnTwo)
@@ -111,6 +117,9 @@ func createTableOne(stub shim.ChaincodeStubInterface) error {
 	columnTableOne = append(columnTableOne, &columnTwelve)
 	columnTableOne = append(columnTableOne, &columnThirteen)
 	columnTableOne = append(columnTableOne, &columnFourteen)
+	columnTableOne = append(columnTableOne, &columnFifteen)
+	columnTableOne = append(columnTableOne, &columnSixteen)
+	
 	return stub.CreateTable("PurchaseOrder", columnTableOne)
 }
 
@@ -136,6 +145,10 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		col12Val := args[11]
 		col13Val := args[12]
 		col14Val := args[13]
+		col15Val := args[14]
+		col16Val := args[15]
+		
+		
 
 		var columns []*shim.Column
 		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
@@ -152,6 +165,8 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		col12 := shim.Column{Value: &shim.Column_String_{String_: col12Val}}
 		col13 := shim.Column{Value: &shim.Column_String_{String_: col13Val}}
 		col14 := shim.Column{Value: &shim.Column_String_{String_: col14Val}}
+		col15 := shim.Column{Value: &shim.Column_String_{String_: col15Val}}
+		col16 := shim.Column{Value: &shim.Column_String_{String_: col16Val}}
 
 		columns = append(columns, &col1)
 		columns = append(columns, &col2)
@@ -167,6 +182,8 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		columns = append(columns, &col12)
 		columns = append(columns, &col13)
 		columns = append(columns, &col14)
+		columns = append(columns, &col15)
+		columns = append(columns, &col16)
 
 		row := shim.Row{Columns: columns}
 		ok, err := stub.InsertRow("PurchaseOrder", row)
@@ -216,7 +233,9 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		cl12 := shim.Column{Value: &shim.Column_String_{String_: v.PoCreationDate}}
 		cl13 := shim.Column{Value: &shim.Column_String_{String_: v.ExpectedDeliveryDate}}
 		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[2]}}
-
+		cl15 := shim.Column{Value: &shim.Column_String_{String_: v.FinancialAgreementNo}}	
+		cl16 := shim.Column{Value: &shim.Column_String_{String_: v.Order.Quantity}}
+		
 		columns = append(columns, &cl1)
 		columns = append(columns, &cl2)
 		columns = append(columns, &cl3)
@@ -231,7 +250,8 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		columns = append(columns, &cl12)
 		columns = append(columns, &cl13)
 		columns = append(columns, &cl14)
-
+		columns = append(columns, &cl15)
+		columns = append(columns, &cl16)
 		rw := shim.Row{Columns: columns}
 		ok, err := stub.ReplaceRow("PurchaseOrder", rw)
 
@@ -304,11 +324,6 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 
 		var columns []shim.Column
 
-		//		col1Val := args[0]
-		//		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-		//
-		//		columns = append(columns, col1)
-
 		rowChannel, err := stub.GetRows("PurchaseOrder", columns)
 
 		if err != nil {
@@ -358,7 +373,130 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 		}
 
 		return jsonRows, nil
+	
+	case "getAllPoByOemId":
+		if len(args) < 1 {
+			return nil, errors.New("getRowsTableFour failed. Must include 1 key value")
+		}
 
+		var columns []shim.Column
+
+		rowChannel, err := stub.GetRows("PurchaseOrder", columns)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. %s", err)
+		}
+
+		res2E := []*PoOrder{}
+
+		for {
+			select {
+
+			case row, ok := <-rowChannel:
+
+				if !ok {
+					rowChannel = nil
+				} else {
+
+					u := new(PoOrder)
+					u.PoID = row.Columns[0].GetString_()
+				
+					u.OemName = row.Columns[2].GetString_()
+					u.OemAddress = row.Columns[3].GetString_()
+					u.DealerID = row.Columns[4].GetString_()
+					u.DealerName = row.Columns[5].GetString_()
+					u.DealerAddress = row.Columns[6].GetString_()
+					v := OrderDetails{}
+					v.VehicleMake = row.Columns[7].GetString_()
+					v.Model = row.Columns[8].GetString_()
+					v.Price = row.Columns[9].GetString_()
+					u.Order = v
+					u.PoAmount = row.Columns[10].GetString_()
+					u.PoCreationDate = row.Columns[11].GetString_()
+					u.ExpectedDeliveryDate = row.Columns[12].GetString_()
+					u.Status = row.Columns[13].GetString_()
+					if row.Columns[1].GetString_() == args[0]{
+						u.OemID = row.Columns[1].GetString_()
+					res2E = append(res2E, u)
+					}
+				}
+			}
+			if rowChannel == nil {
+				break
+			}
+		}
+
+		jsonRows, err := json.Marshal(res2E)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. Error marshaling JSON: %s", err)
+		}
+		
+		return jsonRows, nil
+		
+		case "getAllPoByDealerId":
+		if len(args) < 1 {
+			return nil, errors.New("getRowsTableFour failed. Must include 1 key value")
+		}
+
+		var columns []shim.Column
+
+		rowChannel, err := stub.GetRows("PurchaseOrder", columns)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. %s", err)
+		}
+
+		res2E := []*PoOrder{}
+
+		for {
+			select {
+
+			case row, ok := <-rowChannel:
+
+				if !ok {
+					rowChannel = nil
+				} else {
+
+					u := new(PoOrder)
+					u.PoID = row.Columns[0].GetString_()
+					u.OemID = row.Columns[1].GetString_()
+					u.OemName = row.Columns[2].GetString_()
+					u.OemAddress = row.Columns[3].GetString_()
+					u.DealerID = row.Columns[4].GetString_()
+					u.DealerName = row.Columns[5].GetString_()
+					u.DealerAddress = row.Columns[6].GetString_()
+					v := OrderDetails{}
+					v.VehicleMake = row.Columns[7].GetString_()
+					v.Model = row.Columns[8].GetString_()
+					v.Price = row.Columns[9].GetString_()
+					v.Quantity=row.Columns[14].GetString_()
+					u.Order = v
+					u.PoAmount = row.Columns[10].GetString_()
+					u.PoCreationDate = row.Columns[11].GetString_()
+					u.ExpectedDeliveryDate = row.Columns[12].GetString_()
+					u.Status = row.Columns[13].GetString_()
+					u.FinancialAgreementNo=row.Columns[15].GetString_()
+					if row.Columns[4].GetString_() == args[0]{
+						u.DealerID = row.Columns[1].GetString_()
+					res2E = append(res2E, u)
+					}
+					
+				}
+			}
+			if rowChannel == nil {
+				break
+			}
+		}
+
+		jsonRows, err := json.Marshal(res2E)
+
+		if err != nil {
+			return nil, fmt.Errorf("getRowsTableFour operation failed. Error marshaling JSON: %s", err)
+		}
+
+		return jsonRows, nil
+	
 	default:
 		return nil, errors.New("Unsupported operation")
 	}
@@ -380,10 +518,13 @@ func (t *OEM) convert(row shim.Row) PoOrder {
 	v.VehicleMake = row.Columns[7].GetString_()
 	v.Model = row.Columns[8].GetString_()
 	v.Price = row.Columns[9].GetString_()
+	v.Quantity=row.Columns[14].GetString_()
 	u.Order = v
 	u.PoAmount = row.Columns[10].GetString_()
 	u.PoCreationDate = row.Columns[11].GetString_()
 	u.ExpectedDeliveryDate = row.Columns[12].GetString_()
 	u.Status = row.Columns[13].GetString_()
+	u.FinancialAgreementNo=row.Columns[15].GetString_()
+	
 	return u
 }
