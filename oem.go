@@ -232,7 +232,7 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		cl11 := shim.Column{Value: &shim.Column_String_{String_: v.PoAmount}}
 		cl12 := shim.Column{Value: &shim.Column_String_{String_: v.PoCreationDate}}
 		cl13 := shim.Column{Value: &shim.Column_String_{String_: v.ExpectedDeliveryDate}}
-		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[2]}}
+		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[1]}}
 		cl15 := shim.Column{Value: &shim.Column_String_{String_: v.FinancialAgreementNo}}	
 		cl16 := shim.Column{Value: &shim.Column_String_{String_: v.Order.Quantity}}
 		
