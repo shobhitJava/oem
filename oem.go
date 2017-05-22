@@ -25,7 +25,7 @@ type PoOrder struct {
 	PoCreationDate       string       `json:"poCreationDate"`
 	ExpectedDeliveryDate string       `json:"expectedDeliveryDate"`
 	Status               string       `json:"status"`
-	FinancialAgreementNo string		  `json:"status"`
+	FinancialAgreementNo string		  `json:"financialAgreementNo"`
 }
 
 //this struct is tp create orederdetails
@@ -33,7 +33,7 @@ type OrderDetails struct {
 	VehicleMake string `json:"make"`
 	Model       string `json:"model"`
 	Price       string `json:"price"`
-	Quantity	string	`json:"qunatity"`
+	Quantity	string	`json:"quantity"`
 }
 
 type InvoiceDetails struct {
@@ -463,7 +463,6 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 					u.OemID = row.Columns[1].GetString_()
 					u.OemName = row.Columns[2].GetString_()
 					u.OemAddress = row.Columns[3].GetString_()
-					u.DealerID = row.Columns[4].GetString_()
 					u.DealerName = row.Columns[5].GetString_()
 					u.DealerAddress = row.Columns[6].GetString_()
 					v := OrderDetails{}
@@ -478,7 +477,7 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 					u.Status = row.Columns[13].GetString_()
 					u.FinancialAgreementNo=row.Columns[15].GetString_()
 					if row.Columns[4].GetString_() == args[0]{
-						u.DealerID = row.Columns[1].GetString_()
+						u.DealerID = row.Columns[4].GetString_()
 					res2E = append(res2E, u)
 					}
 					
