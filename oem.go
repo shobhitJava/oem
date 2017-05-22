@@ -79,7 +79,7 @@ func createTableOne(stub shim.ChaincodeStubInterface) error {
 	columnFour := shim.ColumnDefinition{Name: "oemAddress",
 		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnFive := shim.ColumnDefinition{Name: "dealerID",
-		Type: shim.ColumnDefinition_STRING, Key: true}
+		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnSix := shim.ColumnDefinition{Name: "dealerName",
 		Type: shim.ColumnDefinition_STRING, Key: false}
 	columnSeven := shim.ColumnDefinition{Name: "dealerAddress",
@@ -202,13 +202,13 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		}
 
 		col1Val := args[0]
-		col2Val := args[1]
+		
 		var columnsUp []shim.Column
 		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+		
 
 		columnsUp = append(columnsUp, col1)
-		columnsUp = append(columnsUp, col2)
+	
 
 		row, err := stub.GetRow("PurchaseOrder", columnsUp)
 		if err != nil {
@@ -278,13 +278,13 @@ func (t *OEM) Query(stub shim.ChaincodeStubInterface, function string, args []st
 			return nil, errors.New("getRowTableOne failed. Must include 1 key value")
 		}
 		col1Val := args[0]
-		col2Val := args[1]
+		
 		var columns []shim.Column
 		col1 := shim.Column{Value: &shim.Column_String_{String_: col1Val}}
-		col2 := shim.Column{Value: &shim.Column_String_{String_: col2Val}}
+	
 
 		columns = append(columns, col1)
-		columns = append(columns, col2)
+	
 
 		row, err := stub.GetRow("PurchaseOrder", columns)
 		if err != nil {
