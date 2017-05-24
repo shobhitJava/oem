@@ -233,9 +233,7 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		cl12 := shim.Column{Value: &shim.Column_String_{String_: v.PoCreationDate}}
 		cl13 := shim.Column{Value: &shim.Column_String_{String_: v.ExpectedDeliveryDate}}
 		cl14 := shim.Column{Value: &shim.Column_String_{String_: args[1]}}
-		cl15 := shim.Column{Value: &shim.Column_String_{String_: v.FinancialAgreementNo}}	
-		cl16 := shim.Column{Value: &shim.Column_String_{String_: v.Order.Quantity}}
-		
+		cl15 := shim.Column{Value: &shim.Column_String_{String_: v.Order.Quantity}}
 		columns = append(columns, &cl1)
 		columns = append(columns, &cl2)
 		columns = append(columns, &cl3)
@@ -251,7 +249,16 @@ func (t *OEM) Invoke(stub shim.ChaincodeStubInterface, function string, args []s
 		columns = append(columns, &cl13)
 		columns = append(columns, &cl14)
 		columns = append(columns, &cl15)
+		if args[2]!= ""{
+		cl16 := shim.Column{Value: &shim.Column_String_{String_: args[2]}}	
 		columns = append(columns, &cl16)
+		}else{
+		cl16 := shim.Column{Value: &shim.Column_String_{String_: v.FinancialAgreementNo}}
+		columns = append(columns, &cl16)
+		}
+		
+		
+		
 		rw := shim.Row{Columns: columns}
 		ok, err := stub.ReplaceRow("PurchaseOrder", rw)
 
